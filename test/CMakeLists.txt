@@ -57,7 +57,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/utrecht_tiles/
   #COMMAND cp ${CMAKE_BINARY_DIR}/test/data/tz.sqlite ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/
   #COMMAND md5 ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/tz.sqlite || md5sum ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/tz.sqlite
-  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones 2>/dev/null > test/data/utrecht_tiles/tz.sqlite
+  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones  > test/data/utrecht_tiles/tz.sqlite
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/utrecht_tiles/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
@@ -91,7 +91,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/roma_tiles/
   #COMMAND cp ${CMAKE_BINARY_DIR}/test/data/tz.sqlite ${CMAKE_BINARY_DIR}/test/data/roma_tiles/
   #COMMAND md5 ${CMAKE_BINARY_DIR}/test/data/roma_tiles/tz.sqlite || md5sum ${CMAKE_BINARY_DIR}/test/data/roma_tiles/tz.sqlite
-  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones 2>/dev/null > test/data/roma_tiles/tz.sqlite
+  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones > test/data/roma_tiles/tz.sqlite
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/roma_tiles","timezone":"test/data/roma_tiles/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf
@@ -131,9 +131,9 @@ foreach(test ${tests} ${cost_tests})
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
       /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/${test}.log \
-      && echo $(tput setaf 2)$(tput bold)[PASS]$(tput sgr0) ${test} \
+      && echo [PASS] ${test} \
       || ( exit=$? ; \
-           echo $(tput setaf 1)$(tput bold)[FAIL]$(tput sgr0) ${test} ; \
+           echo [FAIL] ${test} ; \
            cat ${CMAKE_CURRENT_BINARY_DIR}/${test}.log ; \
            exit $exit )"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
