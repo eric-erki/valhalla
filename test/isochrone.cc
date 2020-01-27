@@ -100,9 +100,8 @@ void test_isochrones() {
   thor_worker_t thor_worker(config);
   GraphReader reader(config.get_child("mjolnir"));
 
-// Test auto isochrone with one contour
-// 32bit builds fail in release mode we'll look at this separately
-#if _WIN64 || __amd64__
+  // Test auto isochrone with one contour
+  // 32bit builds fail in release mode we'll look at this separately
   {
     std::cout << "test-case 1" << std::endl;
 
@@ -124,7 +123,6 @@ void test_isochrones() {
         R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","contours":[{"time":15}],"polygons":true,"denoise":0.2})";
     try_isochrone(reader, loki_worker, thor_worker, test_request2, expected);
   }
-#endif
 }
 
 int main(int argc, char* argv[]) {
