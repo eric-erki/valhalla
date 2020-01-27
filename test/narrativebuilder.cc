@@ -8077,7 +8077,9 @@ void TestFormRampStraightInstruction() {
                                  "Stay straight to take the Gettysburg Pike ramp.");
 }
 
-void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, const std::string& expected) {
+void TryFormRampRightInstruction(NarrativeBuilderTest& nbt,
+                                 Maneuver maneuver,
+                                 const std::string& expected) {
   std::string instruction = nbt.FormRampInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampRightInstruction | actual=" + instruction +
@@ -8254,7 +8256,9 @@ void TestFormRampRightInstruction() {
                               "Take the Gettysburg Pike ramp.");
 }
 
-void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, const std::string& expected) {
+void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt,
+                                Maneuver maneuver,
+                                const std::string& expected) {
   std::string instruction = nbt.FormRampInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampLeftInstruction");
@@ -8430,7 +8434,9 @@ void TestFormRampLeftInstruction() {
                              "Take the Gettysburg Pike ramp.");
 }
 
-void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, const std::string& expected) {
+void TryFormExitRightInstruction(NarrativeBuilderTest& nbt,
+                                 Maneuver maneuver,
+                                 const std::string& expected) {
   std::string instruction = nbt.FormExitInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormExitRightInstruction | actual=" + instruction +
@@ -8654,7 +8660,9 @@ void TestFormExitRightInstruction() {
       "Take the Gettysburg Pike exit onto US 15 toward Harrisburg/Gettysburg.");
 }
 
-void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, const std::string& expected) {
+void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt,
+                                Maneuver maneuver,
+                                const std::string& expected) {
   std::string instruction = nbt.FormExitInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormExitLeftInstruction | actual=" + instruction +
