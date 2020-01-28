@@ -1049,7 +1049,8 @@ void test_intersection_matching() {
           {"lat": 52.0952055, "lon": 5.1292756, "type": "break"},
           {"lat": 52.0952580, "lon": 5.1301359, "type": "break"},
           {"lat": 52.0952939, "lon": 5.1309020, "type": "break"},
-          {"lat": 52.0944788, "lon": 5.1304066, "type": "break"}]})"};
+          {"lat": 52.0944788, "lon": 5.1304066, "type": "break"}]})",
+  };
   std::vector<std::pair<int, std::vector<float>>> test_answers = {{1, {7.3}},
                                                                   {3, {61.7, 41.6, 109.4}},
                                                                   {4, {49.3, 61, 52.6, 99}}};
@@ -1058,6 +1059,9 @@ void test_intersection_matching() {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& routes = matched.get_child("matchings");
+    if (routes.size() != 1) {
+      std::cout << "expect a single route but got " << routes.size() << std::endl;
+    }
     for (const auto& route : routes) {
       const auto& legs = route.second.get_child("legs");
       if (legs.size() != test_answers[i].first)
@@ -1076,6 +1080,86 @@ void test_intersection_matching() {
     }
   }
 }
+
+void test_loop_macthing() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.0993304, "lon": 5.1216822, "type": "break"},
+        {"lat": 52.0992882, "lon": 5.1219575, "type": "break"},
+        {"lat": 52.0994164, "lon": 5.1212307, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.1018015, "lon": 5.1308968, "type": "break"},
+        {"lat": 52.1016013, "lon": 5.1306070, "type": "break"},
+        {"lat": 52.1017978, "lon": 5.1310039, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.1017076, "lon": 5.1334543, "type": "break"},
+        {"lat": 52.1016826, "lon": 5.1331334, "type": "break"},
+        {"lat": 52.1016638, "lon": 5.1336886, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.1020233, "lon": 5.1383635, "type": "break"},
+        {"lat": 52.1021162, "lon": 5.1379512, "type": "break"},
+        {"lat": 52.1019992, "lon": 5.1385083, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.1041369, "lon": 5.1387420, "type": "break"},
+        {"lat": 52.1045280, "lon": 5.1384967, "type": "break"},
+        {"lat": 52.1040645, "lon": 5.1399728, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.1020749, "lon": 5.1381869, "type": "break"},
+        {"lat": 52.1016099, "lon": 5.1384563, "type": "break"},
+        {"lat": 52.1018070, "lon": 5.1375196, "type": "break"},
+        {"lat": 52.1021017, "lon": 5.1380476, "type": "break"},
+        {"lat": 52.1020057, "lon": 5.1384831, "type": "break"},
+        {"lat": 52.1017176, "lon": 5.1385166, "type": "break"},
+        {"lat": 52.1013419, "lon": 5.1377732, "type": "break"},
+        {"lat": 52.1019210, "lon": 5.1376183, "type": "break"},
+        {"lat": 52.1021351, "lon": 5.1379347, "type": "break"}]})"};
+
+  std::vector<std::pair<int, std::vector<float>>> test_answers = {{
+                                                                      2,
+                                                                      {4.0, 5.0},
+                                                                  },
+                                                                  {
+                                                                      2,
+                                                                      {4.0, 5.0},
+                                                                  },
+                                                                  {
+                                                                      2,
+                                                                      {4.0, 5.0},
+                                                                  },
+                                                                  {
+                                                                      2,
+                                                                      {4.0, 5.0},
+                                                                  },
+                                                                  {
+                                                                      2,
+                                                                      {4.0, 5.0},
+                                                                  },
+                                                                  {8, {1, 2, 3, 4, 5, 6, 7, 8}}};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    std::cout << "test case: " << i << std::endl;
+    const auto& routes = matched.get_child("matchings");
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      if (legs.size() != test_answers[i].first)
+        std::cout << "Expected " + std::to_string(test_answers[i].first) + " legs but got " +
+                         std::to_string(legs.size())
+                  << std::endl;
+
+      int j = 0;
+      for (const auto& leg : legs) {
+        float duration = leg.second.get<float>("duration");
+        if (duration != test_answers[i].second[j++]) {
+          std::cout << "Expected legs with duration" + std::to_string(test_answers[i].second[j - 1]) +
+                           " but got " + std::to_string(duration)
+                    << std::endl;
+        }
+      }
+    }
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -1086,43 +1170,45 @@ int main(int argc, char* argv[]) {
   if (argc > 2)
     bound = std::stoi(argv[2]);
 
-  suite.test(TEST_CASE(test32bit));
+  //  suite.test(TEST_CASE(test32bit));
+  //
+  //  suite.test(TEST_CASE(test_matcher));
+  //
+  //  suite.test(TEST_CASE(test_trace_route_breaks));
+  //
+  //  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
+  //
+  //  suite.test(TEST_CASE(test_distance_only));
+  //
+  //  suite.test(TEST_CASE(test_time_rejection));
+  //
+  //  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
+  //
+  //  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
+  //
+  //  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
+  //
+  //  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
+  //
+  //  suite.test(TEST_CASE(test_topk_validate));
+  //
+  //  suite.test(TEST_CASE(test_topk_fork_alternate));
+  //
+  //  suite.test(TEST_CASE(test_topk_loop_alternate));
+  //
+  //  suite.test(TEST_CASE(test_topk_frontage_alternate));
+  //
+  //  suite.test(TEST_CASE(test_leg_duration_trimming));
+  //
+  //  suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
+  //
+  //  suite.test(TEST_CASE(test_now_matches));
+  //
+  //  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
+  //
+  //  suite.test(TEST_CASE(test_intersection_matching));
 
-  suite.test(TEST_CASE(test_matcher));
-
-  suite.test(TEST_CASE(test_trace_route_breaks));
-
-  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
-
-  suite.test(TEST_CASE(test_distance_only));
-
-  suite.test(TEST_CASE(test_time_rejection));
-
-  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
-
-  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
-
-  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
-
-  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
-
-  suite.test(TEST_CASE(test_topk_validate));
-
-  suite.test(TEST_CASE(test_topk_fork_alternate));
-
-  suite.test(TEST_CASE(test_topk_loop_alternate));
-
-  suite.test(TEST_CASE(test_topk_frontage_alternate));
-
-  suite.test(TEST_CASE(test_leg_duration_trimming));
-
-  suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
-
-  suite.test(TEST_CASE(test_now_matches));
-
-  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
-
-  suite.test(TEST_CASE(test_intersection_matching));
+  suite.test(TEST_CASE(test_loop_macthing));
 
   return suite.tear_down();
 }
