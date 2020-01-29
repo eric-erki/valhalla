@@ -1084,57 +1084,70 @@ void test_intersection_matching() {
 void test_loop_macthing() {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-        {"lat": 52.0993304, "lon": 5.1216822, "type": "break"},
-        {"lat": 52.0992882, "lon": 5.1219575, "type": "break"},
-        {"lat": 52.0994164, "lon": 5.1212307, "type": "break"}]})",
+        {"lat": 52.0993304, "lon": 5.1216822, "type": "break","radius":15},
+        {"lat": 52.0992882, "lon": 5.1219575, "type": "break","radius":15},
+        {"lat": 52.0994164, "lon": 5.1212307, "type": "break","radius":15}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-        {"lat": 52.1018015, "lon": 5.1308968, "type": "break"},
-        {"lat": 52.1016013, "lon": 5.1306070, "type": "break"},
-        {"lat": 52.1017978, "lon": 5.1310039, "type": "break"}]})",
+        {"lat": 52.1018015, "lon": 5.1308968, "type": "break","radius":15},
+        {"lat": 52.1016013, "lon": 5.1306070, "type": "break","radius":15},
+        {"lat": 52.1017978, "lon": 5.1310039, "type": "break","radius":15}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-        {"lat": 52.1017076, "lon": 5.1334543, "type": "break"},
-        {"lat": 52.1016826, "lon": 5.1331334, "type": "break"},
-        {"lat": 52.1016638, "lon": 5.1336886, "type": "break"}]})",
+        {"lat": 52.1017076, "lon": 5.1334543, "type": "break","radius":15},
+        {"lat": 52.1016826, "lon": 5.1331334, "type": "break","radius":15},
+        {"lat": 52.1016638, "lon": 5.1336886, "type": "break","radius":15}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-        {"lat": 52.1020233, "lon": 5.1383635, "type": "break"},
-        {"lat": 52.1021162, "lon": 5.1379512, "type": "break"},
-        {"lat": 52.1019992, "lon": 5.1385083, "type": "break"}]})",
+        {"lat": 52.1020233, "lon": 5.1383635, "type": "break","radius":15},
+        {"lat": 52.1021162, "lon": 5.1379512, "type": "break","radius":15},
+        {"lat": 52.1019992, "lon": 5.1385083, "type": "break","radius":15}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-        {"lat": 52.1041369, "lon": 5.1387420, "type": "break"},
-        {"lat": 52.1045280, "lon": 5.1384967, "type": "break"},
-        {"lat": 52.1040645, "lon": 5.1399728, "type": "break"}]})",
+        {"lat": 52.1041369, "lon": 5.1387420, "type": "break","radius":15},
+        {"lat": 52.1045280, "lon": 5.1384967, "type": "break","radius":15},
+        {"lat": 52.1040645, "lon": 5.1399728, "type": "break","radius":15}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-        {"lat": 52.1020749, "lon": 5.1381869, "type": "break"},
-        {"lat": 52.1016099, "lon": 5.1384563, "type": "break"},
-        {"lat": 52.1018070, "lon": 5.1375196, "type": "break"},
-        {"lat": 52.1021017, "lon": 5.1380476, "type": "break"},
-        {"lat": 52.1020057, "lon": 5.1384831, "type": "break"},
-        {"lat": 52.1017176, "lon": 5.1385166, "type": "break"},
-        {"lat": 52.1013419, "lon": 5.1377732, "type": "break"},
-        {"lat": 52.1019210, "lon": 5.1376183, "type": "break"},
-        {"lat": 52.1021351, "lon": 5.1379347, "type": "break"}]})"};
+        {"lat": 52.1020749, "lon": 5.1381869, "type": "break","radius":15},
+        {"lat": 52.1016099, "lon": 5.1384563, "type": "break","radius":15},
+        {"lat": 52.1018070, "lon": 5.1375196, "type": "break","radius":15},
+        {"lat": 52.1021017, "lon": 5.1380476, "type": "break","radius":15},
+        {"lat": 52.1020057, "lon": 5.1384831, "type": "break","radius":15},
+        {"lat": 52.1017176, "lon": 5.1385166, "type": "break","radius":15},
+        {"lat": 52.1013419, "lon": 5.1377732, "type": "break","radius":15},
+        {"lat": 52.1019210, "lon": 5.1376183, "type": "break","radius":15},
+        {"lat": 52.1021351, "lon": 5.1379347, "type": "break","radius":15}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.0970785, "lon": 5.1143280, "type": "break"},
+        {"lat": 52.0968968, "lon": 5.1137222, "type": "break"},
+        {"lat": 52.1050671, "lon": 5.1353355, "type": "break"},
+        {"lat": 52.1050766, "lon": 5.1350254, "type": "break"},
+        {"lat": 52.0970362, "lon": 5.1142004, "type": "break"},
+        {"lat": 52.0969516, "lon": 5.1138817, "type": "break"}]})"};
 
-  std::vector<std::pair<int, std::vector<float>>> test_answers = {{
-                                                                      2,
-                                                                      {4.0, 5.0},
-                                                                  },
-                                                                  {
-                                                                      2,
-                                                                      {4.0, 5.0},
-                                                                  },
-                                                                  {
-                                                                      2,
-                                                                      {4.0, 5.0},
-                                                                  },
-                                                                  {
-                                                                      2,
-                                                                      {4.0, 5.0},
-                                                                  },
-                                                                  {
-                                                                      2,
-                                                                      {4.0, 5.0},
-                                                                  },
-                                                                  {8, {1, 2, 3, 4, 5, 6, 7, 8}}};
+  std::vector<std::pair<int, std::vector<float>>> test_answers = {
+      {
+          2,
+          {4.0, 5.0},
+      },
+      {
+          2,
+          {4.0, 5.0},
+      },
+      {
+          2,
+          {4.0, 5.0},
+      },
+      {
+          2,
+          {4.0, 5.0},
+      },
+      {
+          2,
+          {4.0, 5.0},
+      },
+      {8, {1, 2, 3, 4, 5, 6, 7, 8}},
+      {
+          3,
+          {4.0, 5.0, 0.7},
+      },
+  };
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -1152,9 +1165,8 @@ void test_loop_macthing() {
       for (const auto& leg : legs) {
         float duration = leg.second.get<float>("duration");
         if (duration != test_answers[i].second[j++]) {
-          std::cout << "Expected legs with duration" + std::to_string(test_answers[i].second[j - 1]) +
-                           " but got " + std::to_string(duration)
-                    << std::endl;
+          std::cout << "Expected legs with duration " << test_answers[i].second[j - 1] << " but got "
+                    << duration << std::endl;
         }
       }
     }
