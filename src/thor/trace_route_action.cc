@@ -182,6 +182,14 @@ thor_worker_t::map_match(Api& request) {
     auto path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments, mode_costing,
                                            mode, disconnected_edges, options);
 
+    auto iter = std::find_if(match_results.begin(), match_results.end(),
+                             [](const meili::MatchResult& result) {
+                               return result.HasState() && result.edgeid.Is_Valid();
+                             });
+    if (path_edges.empty() && iter != match_results.end()) {
+      std::cout << "this is a unit test -------------------------------------------->" << std::endl;
+    }
+
     // If we want a route but there actually isnt a path, we cant give you one
     if (path_edges.empty() && options.action() == Options::trace_route) {
       throw std::exception{};
@@ -693,68 +701,89 @@ void thor_worker_t::path_map_match(
                                                return result.HasState() && result.edgeid.Is_Valid();
                                              });
 
-  if ((first_result_with_state != match_results.end()) &&
-      (last_result_with_state != match_results.rend())) {
-    valhalla::Location origin;
+  // we are expecting at least one matched result with valid state
+  if (first_result_with_state == match_results.end() &&
+      last_result_with_state == match_results.rend()) {
+    return;
+  }
+  // if there is only one matched locations that has valid states, we out put that location and return
+  else if (first_result_with_state != match_results.end() &&
+           first_result_with_state == last_result_with_state.base() - 1) {
+    valhalla::Location location;
     PathLocation::toPBF(matcher->state_container()
                             .state(first_result_with_state->stateid)
                             .candidate(),
-                        &origin, *reader);
-    valhalla::Location destination;
-    PathLocation::toPBF(matcher->state_container().state(last_result_with_state->stateid).candidate(),
-                        &destination, *reader);
-
-    bool found_origin = false;
-    for (const auto& e : origin.path_edges()) {
-      if (e.graph_id() == path_edges.front().edgeid) {
-        found_origin = true;
-        break;
-      }
-    }
-
-    if (!found_origin) {
-      // 1. origin must be at a node, so we can reuse any one of
-      // origin's edges
-
-      // 2. path_edges.front().edgeid must be the downstream edge that
-      // connects one of origin.edges (twins) at its start node
-      auto* pe = origin.mutable_path_edges()->Add();
-      pe->CopyFrom(origin.path_edges(0));
-      pe->set_graph_id(path_edges.front().edgeid);
-      pe->set_percent_along(0.f);
-    }
-
-    bool found_destination = false;
-    for (const auto& e : destination.path_edges()) {
-      if (e.graph_id() == path_edges.back().edgeid) {
-        found_destination = true;
-        break;
-      }
-    }
-
-    if (!found_destination) {
-      // 1. destination must be at a node, so we can reuse any one of
-      // destination's edges
-
-      // 2. path_edges.back().edgeid must be the upstream edge that
-      // connects one of destination.edges (twins) at its end node
-      auto* pe = destination.mutable_path_edges()->Add();
-      pe->CopyFrom(destination.path_edges(0));
-      pe->set_graph_id(path_edges.back().edgeid);
-      pe->set_percent_along(1.f);
-    }
-
-    // assert origin.edges contains path_edges.front() &&
-    // destination.edges contains path_edges.back()
-
-    // Form the trip path based on mode costing, origin, destination, and path edges
-    thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges.begin(),
-                                path_edges.end(), origin, destination,
-                                std::list<valhalla::Location>{}, trip_path, interrupt,
-                                &route_discontinuities);
-  } else {
-    throw valhalla_exception_t{442};
+                        &location, *reader);
+    return;
   }
+  // if there is no path edges we output all the matched locations which have valid states and edgeids
+  else if (path_edges.empty()) {
+    for (auto iter = first_result_with_state; iter <= last_result_with_state.base() - 1; ++iter) {
+      if (!iter->HasState() || !iter->edgeid.Is_Valid()) {
+        continue;
+      }
+      valhalla::Location location;
+      PathLocation::toPBF(matcher->state_container().state(iter->stateid).candidate(), &location,
+                          *reader);
+    }
+    return;
+  }
+
+  // now that we have edges and more than one matched results, we are safe to building legs
+  valhalla::Location origin;
+  PathLocation::toPBF(matcher->state_container().state(first_result_with_state->stateid).candidate(),
+                      &origin, *reader);
+  valhalla::Location destination;
+  PathLocation::toPBF(matcher->state_container().state(last_result_with_state->stateid).candidate(),
+                      &destination, *reader);
+
+  bool found_origin = false;
+  for (const auto& e : origin.path_edges()) {
+    if (e.graph_id() == path_edges.front().edgeid) {
+      found_origin = true;
+      break;
+    }
+  }
+
+  if (!found_origin) {
+    // 1. origin must be at a node, so we can reuse any one of
+    // origin's edges
+
+    // 2. path_edges.front().edgeid must be the downstream edge that
+    // connects one of origin.edges (twins) at its start node
+    auto* pe = origin.mutable_path_edges()->Add();
+    pe->CopyFrom(origin.path_edges(0));
+    pe->set_graph_id(path_edges.front().edgeid);
+    pe->set_percent_along(0.f);
+  }
+
+  bool found_destination = false;
+  for (const auto& e : destination.path_edges()) {
+    if (e.graph_id() == path_edges.back().edgeid) {
+      found_destination = true;
+      break;
+    }
+  }
+
+  if (!found_destination) {
+    // 1. destination must be at a node, so we can reuse any one of
+    // destination's edges
+
+    // 2. path_edges.back().edgeid must be the upstream edge that
+    // connects one of destination.edges (twins) at its end node
+    auto* pe = destination.mutable_path_edges()->Add();
+    pe->CopyFrom(destination.path_edges(0));
+    pe->set_graph_id(path_edges.back().edgeid);
+    pe->set_percent_along(1.f);
+  }
+
+  // assert origin.edges contains path_edges.front() &&
+  // destination.edges contains path_edges.back()
+
+  // Form the trip path based on mode costing, origin, destination, and path edges
+  thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges.begin(),
+                              path_edges.end(), origin, destination, std::list<valhalla::Location>{},
+                              trip_path, interrupt, &route_discontinuities);
 }
 
 } // namespace thor
