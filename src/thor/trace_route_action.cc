@@ -690,6 +690,18 @@ void thor_worker_t::path_map_match(
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
         route_discontinuities) {
 
+  if (path_edges.empty()) {
+    for (auto iter = match_results.begin(); iter != match_results.cend(); ++iter) {
+      if (!iter->HasState() || !iter->edgeid.Is_Valid()) {
+        continue;
+      }
+      valhalla::Location location;
+      PathLocation::toPBF(matcher->state_container().state(iter->stateid).candidate(), &location,
+                          *reader);
+    }
+    return;
+  }
+
   // Set origin and destination from map matching results
   auto first_result_with_state =
       std::find_if(match_results.begin(), match_results.end(), [](const meili::MatchResult& result) {
@@ -716,20 +728,8 @@ void thor_worker_t::path_map_match(
                         &location, *reader);
     return;
   }
-  // if there is no path edges we output all the matched locations which have valid states and edgeids
-  else if (path_edges.empty()) {
-    for (auto iter = first_result_with_state; iter < last_result_with_state.base(); ++iter) {
-      if (!iter->HasState() || !iter->edgeid.Is_Valid()) {
-        continue;
-      }
-      valhalla::Location location;
-      PathLocation::toPBF(matcher->state_container().state(iter->stateid).candidate(), &location,
-                          *reader);
-    }
-    return;
-  }
 
-  // now that we have edges and more than one matched results, we are safe to building legs
+  // now that we have atleast one edge and at least two matched results, we are safe to building legs
   valhalla::Location origin;
   PathLocation::toPBF(matcher->state_container().state(first_result_with_state->stateid).candidate(),
                       &origin, *reader);
