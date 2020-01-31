@@ -1045,6 +1045,41 @@ TEST(Mapmatch, test_intersection_matching) {
   }
 }
 
+// TEST(Mapmatch, test_seg_trace_attributes_empty_path_edges) {
+//  std::vector<std::string> test_cases = {
+//      R"({"shape":[{"lon":5.1128190,"lat":52.0945055,"radius":5},
+//        {"lon":5.1134867,"lat":52.0946111,"radius":5},
+//        {"lon":5.1142073,"lat":52.0948589,"radius":5}],
+//        "costing":"auto","shape_match":"map_snap","format":"osrm","shape_format":"polyline6"})",
+//      R"({"shape":[{"lon":5.1124048,"lat":52.0952427,"radius":5},
+//         {"lon":5.1127532,"lat":52.0952039,"radius":5}],
+//        "costing":"auto","shape_match":"map_snap","format":"osrm","shape_format":"polyline6"})",
+//  };
+//  std::vector<std::pair<int, std::vector<float>>> test_answers = {{1, {7.3}},
+//                                                                  {3, {61.7, 41.6, 109.4}},
+//                                                                  {4, {49.3, 61, 52.6, 99}}};
+//
+//  tyr::actor_t actor(conf, true);
+//  for (size_t i = 0; i < test_cases.size(); ++i) {
+//    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+//    const auto& routes = matched.get_child("matchings");
+//    for (const auto& route : routes) {
+//      const auto& legs = route.second.get_child("legs");
+//      ASSERT_EQ(legs.size(), test_answers[i].first)
+//          << "Expected " + std::to_string(test_answers[i].first) + " legs but got " +
+//                 std::to_string(legs.size());
+//
+//      int j = 0;
+//      for (const auto& leg : legs) {
+//        float distance = leg.second.get<float>("distance");
+//        ASSERT_EQ(distance, test_answers[i].second[j++])
+//            << "Expected legs with distance" + std::to_string(test_answers[i].second[j - 1]) +
+//                   " but got " + std::to_string(distance);
+//      }
+//    }
+//  }
+//}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

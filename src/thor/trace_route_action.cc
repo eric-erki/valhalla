@@ -702,13 +702,13 @@ void thor_worker_t::path_map_match(
                                              });
 
   // we are expecting at least one matched result with valid state
-  if (first_result_with_state == match_results.end() &&
-      last_result_with_state == match_results.rend()) {
-    return;
+  if (first_result_with_state == match_results.end()) {
+    // TODO: throw or return? we could return empty meta data but it will break one unit test case
+    throw valhalla_exception_t{442};
   }
   // if there is only one matched locations that has valid states, we out put that location and return
   else if (first_result_with_state != match_results.end() &&
-           first_result_with_state == last_result_with_state.base() - 1) {
+           first_result_with_state == std::prev(last_result_with_state.base())) {
     valhalla::Location location;
     PathLocation::toPBF(matcher->state_container()
                             .state(first_result_with_state->stateid)
@@ -718,7 +718,7 @@ void thor_worker_t::path_map_match(
   }
   // if there is no path edges we output all the matched locations which have valid states and edgeids
   else if (path_edges.empty()) {
-    for (auto iter = first_result_with_state; iter <= last_result_with_state.base() - 1; ++iter) {
+    for (auto iter = first_result_with_state; iter < last_result_with_state.base(); ++iter) {
       if (!iter->HasState() || !iter->edgeid.Is_Valid()) {
         continue;
       }
